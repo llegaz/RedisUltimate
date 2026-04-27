@@ -15,5 +15,4 @@ namespace LLegaz\Ultimate\Tests\Unit;
  */
 class RedisUltimateTest
 {
-
 }
