@@ -10,7 +10,6 @@ namespace LLegaz\Ultimate\Stream;
  */
 interface RedisStreamOperationsInterface
 {
-
     /**
     * @param string $key
      * @return int

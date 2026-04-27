@@ -10,7 +10,6 @@ namespace LLegaz\Ultimate\PubSub;
  */
 interface RedisPubSubOperationsInterface
 {
-
     /**
     * @param string $key
      * @return int

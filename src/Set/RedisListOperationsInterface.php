@@ -10,7 +10,6 @@ namespace LLegaz\Ultimate\Set;
  */
 interface RedisSetOperationsInterface
 {
-
     /**
     * @param string $key
      * @return int

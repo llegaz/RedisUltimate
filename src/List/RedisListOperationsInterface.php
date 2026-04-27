@@ -10,7 +10,6 @@ namespace LLegaz\Ultimate\List;
  */
 interface RedisListOperationsInterface
 {
-
     /**
     * @param string $key
      * @return int
