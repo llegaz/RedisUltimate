@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LLegaz\Ultimate\Tests\Functional;
 
 use LLegaz\Ultimate\RedisUltimate as SUT;
+use LLegaz\Ultimate\Tests\TestState;
 
 /**
  * test some functional scenarios
@@ -26,6 +27,12 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
         parent::setUp();
 
         $this->ultimate = new SUT();
+
+        if (!TestState::$adapterClassDisplayed) {
+            TestState::$adapterClassDisplayed = true;
+            fwrite(STDERR, PHP_EOL);
+            dump($this->ultimate->getRedis()->toString() . ' adapter used.');
+        }
     }
 
     /**
