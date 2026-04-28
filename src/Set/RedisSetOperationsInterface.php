@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LLegaz\Ultimate\Set;
 
 /**
+ * move this in LLegaz\Redis\RedisClientInterface
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
