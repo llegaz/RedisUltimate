@@ -21,7 +21,7 @@ class RedisMQTest extends RedisAdapterTestBase
     /** @var \PHPUnit\Framework\MockObject\MockObject&RedisClientInterface */
     protected RedisClientInterface $predisClient;
 
-    public function testGet()
+    public function testNotImplementedYet()
     {
         $this->assertFalse(false);
     }

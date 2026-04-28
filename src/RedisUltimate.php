@@ -11,7 +11,6 @@ use LLegaz\Ultimate\Exception\InvalidKeyException;
 /**
  * This class purpose is mainly to handle SETs operations but also to wrap other utility methods not handled in RedisCache
  * 
- * For convenience we'll handle strings value only for now.
  * 
  * 
  * <b>Convention</b>
@@ -45,22 +44,15 @@ class RedisUltimate extends RedisAdapter {
      * @param mixed $members
      * @return int
      */
-    public function remove(string $key, string $member, ?string ...$members): int {
+    public function remove(string $key, mixed ...$members): int {
         $redisResponse = 0;
-        if (!strlen($member)) {
+        if (!count($members)) {
             throw new InvalidArgumentException();
         }
         $this->init($key);
 
         try {
-            if ($members) {
-                $params = array_merge([$member], $members);
-                //dd('pamrams', array_merge([$key], $params));
-                $redisResponse = call_user_func_array([$this->getRedis(), 'srem'], array_merge([$key], $params));
-                dump('pamrams', $redisResponse);
-            } else {
-                $redisResponse = $this->getRedis()->srem($key, $member);
-            }
+            $redisResponse = call_user_func_array([$this->getRedis(), 'srem'], array_merge([$key], $members));
         } catch (\Throwable $t) {
             $redisResponse = 0;
             dump('fail', $t);
@@ -77,19 +69,15 @@ class RedisUltimate extends RedisAdapter {
      * @param mixed $members
      * @return int
      */
-    public function add(string $key, string ...$members): int {
+    public function add(string $key, mixed ...$members): int {
         $redisResponse = 0;
-        if (!$members) {
+        if (!count($members)) {
             throw new InvalidArgumentException();
         }
         $this->init($key);
 
         try {
-            if (is_array($members)) {
-                $redisResponse = $this->getRedis()->sAddArray($key, $members);
-            } else {
-                $redisResponse = $this->getRedis()->sadd($key, $members);
-            }
+            $redisResponse = call_user_func_array([$this->getRedis(), 'sadd'], array_merge([$key], $members));
         } catch (\Throwable $t) {
             $redisResponse = 0;
             $this->formatException($t);
