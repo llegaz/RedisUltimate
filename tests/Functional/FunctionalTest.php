@@ -46,7 +46,7 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
         $this->ultimate->add($this->setsName[1], ...$this->set2);
         $this->ultimate->add($this->setsName[2], ...$this->set3);
 
-        $this->assertEquals(
+        $this->assertEqualsCanonicalizing(
             ['banana', 'apple'],
             $this->ultimate->intersect(
                 $this->setsName[0],
@@ -72,7 +72,7 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
     {
         $this->assertFalse($this->ultimate->isMember($this->setsName[2], 'truc'));
         $this->assertTrue($this->ultimate->isMember($this->setsName[2], 'apple'));
-        $this->assertEquals(
+        $this->assertSame(
             1,
             $this->ultimate->remove($this->setsName[2], 'apple')
         );
@@ -87,7 +87,7 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
 
         $this->assertFalse($this->ultimate->isMember($this->setsName[0], 'truc'));
         $this->assertTrue($this->ultimate->isMember($this->setsName[0], 'carrot'));
-        $this->assertEquals(
+        $this->assertSame(
             1,
             $this->ultimate->remove($this->setsName[0], 'carrot')
         );
@@ -97,7 +97,7 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
             $this->setsName[2],
         );
         $this->assertEquals([], $diff);
-        $this->assertEquals(0, count($diff));
+        $this->assertSame(0, count($diff));
     }
 
 
@@ -107,8 +107,8 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
      */
     public function testCountSet(): void
     {
-        $this->assertEquals(3, $this->ultimate->count($this->setsName[1]));
-        $this->assertEquals(
+        $this->assertSame(3, $this->ultimate->count($this->setsName[1]));
+        $this->assertSame(
             3,
             $this->ultimate->remove(
                 $this->setsName[1],
@@ -118,11 +118,7 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
                 'truc'
             )
         );
-        $this->assertEquals(0, $this->ultimate->count($this->setsName[1]));
-
-        $this->ultimate->deleteSet('test1');
-        $this->ultimate->deleteSet('test2');
-        $this->ultimate->deleteSet('test3');
+        $this->assertSame(0, $this->ultimate->count($this->setsName[1]));
     }
 
     /**
