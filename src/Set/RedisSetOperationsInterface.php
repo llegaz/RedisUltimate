@@ -53,4 +53,13 @@ interface RedisSetOperationsInterface {
      * @return int
      */
     public function scard(string $key): int;
+
+    /**
+     * Compute the intersection of one or more sets and return the cardinality of the result.
+     * 
+     * @param <string>array $keys One or more set key names.
+     * @param int $limit A maximum cardinality to return. This is useful to put an upper bound on the amount of work Redis will do.
+     * @return array|false 
+     */
+    public function sinter(array $keys, int $limit = -1): array | false;
 }
