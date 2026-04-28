@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace LLegaz\Ultimate;
 
 use LLegaz\Redis\RedisAdapter;
+use LLegaz\Ultimate\Exception\InvalidArgumentException;
+use LLegaz\Ultimate\Exception\InvalidKeyException;
 
 /**
  * This class purpose is mainly to handle SETs operations but also to wrap other utility methods not handled in RedisCache
+ * 
+ * For convenience we'll handle strings value only for now.
  * 
  * 
  * <b>Convention</b>
@@ -41,8 +45,29 @@ class RedisUltimate extends RedisAdapter {
      * @param mixed $members
      * @return int
      */
-    public function remove(string $key, array $members): int {
-        // use srem
+    public function remove(string $key, string $member, ?string ...$members): int {
+        $redisResponse = 0;
+        if (!strlen($member)) {
+            throw new InvalidArgumentException();
+        }
+        $this->init($key);
+
+        try {
+            if ($members) {
+                $params = array_merge([$member], $members);
+                //dd('pamrams', array_merge([$key], $params));
+                $redisResponse = call_user_func_array([$this->getRedis(), 'srem'], array_merge([$key], $params));
+                dump('pamrams', $redisResponse);
+            } else {
+                $redisResponse = $this->getRedis()->srem($key, $member);
+            }
+        } catch (\Throwable $t) {
+            $redisResponse = 0;
+            dump('fail', $t);
+            $this->formatException($t);
+        } finally {
+            return $redisResponse;
+        }
     }
 
     /**
@@ -52,8 +77,25 @@ class RedisUltimate extends RedisAdapter {
      * @param mixed $members
      * @return int
      */
-    public function add(string $key, array $members): int {
-        // use sadd
+    public function add(string $key, string ...$members): int {
+        $redisResponse = 0;
+        if (!$members) {
+            throw new InvalidArgumentException();
+        }
+        $this->init($key);
+
+        try {
+            if (is_array($members)) {
+                $redisResponse = $this->getRedis()->sAddArray($key, $members);
+            } else {
+                $redisResponse = $this->getRedis()->sadd($key, $members);
+            }
+        } catch (\Throwable $t) {
+            $redisResponse = 0;
+            $this->formatException($t);
+        } finally {
+            return $redisResponse;
+        }
     }
 
     /**
@@ -63,7 +105,17 @@ class RedisUltimate extends RedisAdapter {
      * @return int
      */
     public function count(string $key): int{
-        // use scard
+        $redisResponse = 0;
+        $this->init($key);
+
+        try {
+            $redisResponse = $this->getRedis()->scard($key);
+        } catch (\Throwable $t) {
+            $redisResponse = [];
+            $this->formatException($t);
+        } finally {
+            return $redisResponse;
+        }
     }
 
 
@@ -74,8 +126,18 @@ class RedisUltimate extends RedisAdapter {
      * @return array the set members
      */
     public function members(string $key): array {
-        
-    }// use smembers
+        $redisResponse = [];
+        $this->init($key);
+
+        try {
+            $redisResponse = $this->getRedis()->smembers($key);
+        } catch (\Throwable $t) {
+            $redisResponse = [];
+            $this->formatException($t);
+        } finally {
+            return $redisResponse;
+        }
+    }
 
     /**
      * Check if a member exists
@@ -85,24 +147,37 @@ class RedisUltimate extends RedisAdapter {
      * @return bool
      */
     public function isMember(string $key, mixed $member): bool {
-        // use sismember
+        $redisResponse = false;
+        if (!$member) {
+            throw new InvalidArgumentException();
+        }
+        $this->init($key);
+
+        try {
+            $redisResponse = $this->getRedis()->sismember($key, $member);
+        } catch (\Throwable $t) {
+            $redisResponse = false;
+            $this->formatException($t);
+        } finally {
+            return $redisResponse;
+        }
     }
 
     /**
-     *  Compute the intersection of one or more sets and return MAX_RESULTS intersected members of SETs.
+     *  Compute the intersection of one or more sets and return intersected members of all SETs.
      * 
      * @param <string>array $keys One or more set key names.
      * @return array|false 
      */
-    public function intersect(array $keys): array | false {
+    public function intersect(string ...$keys): array | false {
         $redisResponse = false;
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
 
         try {
-            if (count($keys)) {
-                $redisResponse = $this->getRedis()->sinter($keys, self::MAX_RESULTS);
+            if ($keys) {
+                $redisResponse = $this->getRedis()->sinter($keys);
             }
         } catch (\Throwable $t) {
             $redisResponse = false;
@@ -112,6 +187,29 @@ class RedisUltimate extends RedisAdapter {
         }
     }
 
+    /**
+     * Given one or more Redis SETS, this command returns all of the members from the first set that are not in any subsequent set.
+     * 
+     * @param string $keys
+     * @return array|false
+     */
+    public function difference(string ...$keys): array | false {
+        $redisResponse = false;
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+
+        try {
+            if ($keys) {
+                $redisResponse = $this->getRedis()->sdiff($keys);
+            }
+        } catch (\Throwable $t) {
+            $redisResponse = false;
+            $this->formatException($t);
+        } finally {
+            return $redisResponse;
+        }
+    }
     /**************************************************
      * Non SET(s) operations
      * 
@@ -124,7 +222,24 @@ class RedisUltimate extends RedisAdapter {
      * @return int
      */
     public function incrementCounter(string $key): int {
+        $this->init($key);
+
         return $this->getRedis()->incr($key);
     }
 
+    /**
+     * 
+     * @param string $key
+     * @return void
+     * @throws InvalidKeyException
+     * @throws \LLegaz\Redis\Exception\ConnectionLostException
+     */
+    private function init(string $key):void {
+        if (!strlen($key)) {
+            throw new InvalidKeyException();
+        }
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+    }
 }

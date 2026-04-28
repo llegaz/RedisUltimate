@@ -26,35 +26,12 @@ sdiff(string $key, string ...$keys): array     // Difference
 
 ---
 
-## 3️⃣ Key Management
+## 3️⃣ Lists — Basic MQ
 
 ```php
-exists(string $key): bool                      // Check existence
-del(string ...$keys): int                      // Delete one or more keys
-expire(string $key, int $ttl): bool            // Set TTL (seconds)
-ttl(string $key): int                          // Get remaining TTL
-```
-
----
-
-## 4️⃣ Hash — Data Storage
-will most certainly use [Redis Cache](https://packagist.org/packages/llegaz/redis-cache).
-
-```php
-hset(string $key, string $field, mixed $value): int    // Set a field
-hget(string $key, string $field): mixed                // Get a field
-hgetall(string $key): array                            // Get all fields
-hdel(string $key, string ...$fields): int              // Delete one or more fields
-```
-
----
-
-## 5️⃣ Lists — Basic MQ
-
-```php
-lpush(string $key, mixed ...$values): int      // Producer: push a message
-brpop(string $key, int $timeout): array        // Blocking consumer
-rpop(string $key): mixed                       // Non-blocking consumer
+rpush(string $key, mixed ...$values): int      // Producer: push a message
+lpop(string $key): mixed                       // Non-blocking consumer
+lmpop(string $key): array
 llen(string $key): int                         // Queue length
 ```
 
