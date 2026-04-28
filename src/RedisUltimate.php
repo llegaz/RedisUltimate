@@ -10,19 +10,19 @@ use LLegaz\Ultimate\Exception\InvalidKeyException;
 
 /**
  * This class purpose is mainly to handle SETs operations but also to wrap other utility methods not handled in RedisCache
- * 
- * 
- * 
+ *
+ *
+ *
  * <b>Convention</b>
  * KEY is the set's NAME
  * MEMBER(s) the set's members
- * 
+ *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class RedisUltimate extends RedisAdapter {
-    const MAX_RESULTS = 256;
-
-    public function deleteSet(string $key): bool {
+class RedisUltimate extends RedisAdapter
+{
+    public function deleteSet(string $key): bool
+    {
         if (!$this->isConnected()) {
             $this->throwCLEx();
         }
@@ -39,12 +39,13 @@ class RedisUltimate extends RedisAdapter {
 
     /**
      * Remove one or more members
-     * 
+     *
      * @param string $key
      * @param mixed $members
      * @return int
      */
-    public function remove(string $key, mixed ...$members): int {
+    public function remove(string $key, mixed ...$members): int
+    {
         $redisResponse = 0;
         if (!count($members)) {
             throw new InvalidArgumentException();
@@ -64,12 +65,13 @@ class RedisUltimate extends RedisAdapter {
 
     /**
      * Add one or more members
-     * 
+     *
      * @param string $key
      * @param mixed $members
      * @return int
      */
-    public function add(string $key, mixed ...$members): int {
+    public function add(string $key, mixed ...$members): int
+    {
         $redisResponse = 0;
         if (!count($members)) {
             throw new InvalidArgumentException();
@@ -88,11 +90,12 @@ class RedisUltimate extends RedisAdapter {
 
     /**
      * Count members
-     * 
+     *
      * @param string $key
      * @return int
      */
-    public function count(string $key): int{
+    public function count(string $key): int
+    {
         $redisResponse = 0;
         $this->init($key);
 
@@ -109,11 +112,12 @@ class RedisUltimate extends RedisAdapter {
 
     /**
      * Return all members
-     * 
+     *
      * @param string $key
      * @return array the set members
      */
-    public function members(string $key): array {
+    public function members(string $key): array
+    {
         $redisResponse = [];
         $this->init($key);
 
@@ -129,12 +133,13 @@ class RedisUltimate extends RedisAdapter {
 
     /**
      * Check if a member exists
-     * 
+     *
      * @param string $key
      * @param mixed $member
      * @return bool
      */
-    public function isMember(string $key, mixed $member): bool {
+    public function isMember(string $key, mixed $member): bool
+    {
         $redisResponse = false;
         if (!$member) {
             throw new InvalidArgumentException();
@@ -153,11 +158,12 @@ class RedisUltimate extends RedisAdapter {
 
     /**
      *  Compute the intersection of one or more sets and return intersected members of all SETs.
-     * 
+     *
      * @param <string>array $keys One or more set key names.
-     * @return array|false 
+     * @return array|false
      */
-    public function intersect(string ...$keys): array | false {
+    public function intersect(string ...$keys): array | false
+    {
         $redisResponse = false;
         if (!$this->isConnected()) {
             $this->throwCLEx();
@@ -177,11 +183,12 @@ class RedisUltimate extends RedisAdapter {
 
     /**
      * Given one or more Redis SETS, this command returns all of the members from the first set that are not in any subsequent set.
-     * 
+     *
      * @param string $keys
      * @return array|false
      */
-    public function difference(string ...$keys): array | false {
+    public function difference(string ...$keys): array | false
+    {
         $redisResponse = false;
         if (!$this->isConnected()) {
             $this->throwCLEx();
@@ -200,29 +207,31 @@ class RedisUltimate extends RedisAdapter {
     }
     /**************************************************
      * Non SET(s) operations
-     * 
+     *
      */
 
     /**
      * increment a counter stored in Redis
-     * 
+     *
      * @param string $key
      * @return int
      */
-    public function incrementCounter(string $key): int {
+    public function incrementCounter(string $key): int
+    {
         $this->init($key);
 
         return $this->getRedis()->incr($key);
     }
 
     /**
-     * 
+     *
      * @param string $key
      * @return void
      * @throws InvalidKeyException
      * @throws \LLegaz\Redis\Exception\ConnectionLostException
      */
-    private function init(string $key):void {
+    private function init(string $key): void
+    {
         if (!strlen($key)) {
             throw new InvalidKeyException();
         }
