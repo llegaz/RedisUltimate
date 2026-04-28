@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace LLegaz\Ultimate\Tests\Unit;
 
-use LLegaz\Redis\Tests\RedisAdapterTestBase;
 use LLegaz\Redis\RedisClientInterface;
+use LLegaz\Redis\Tests\RedisAdapterTestBase;
 
 /**
  *
@@ -26,7 +26,8 @@ class RedisMQTest extends RedisAdapterTestBase
         $this->assertFalse(false);
     }
 
-    protected function getSelfClient(): RedisClientInterface {
+    protected function getSelfClient(): RedisClientInterface
+    {
         return $this->predisClient;
     }
 
