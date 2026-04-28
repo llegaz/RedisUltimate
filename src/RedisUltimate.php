@@ -152,7 +152,7 @@ class RedisUltimate extends RedisAdapter
             $redisResponse = false;
             $this->formatException($t);
         } finally {
-            return $redisResponse;
+            return is_int($redisResponse) ? $redisResponse === 1 : $redisResponse;
         }
     }
 
