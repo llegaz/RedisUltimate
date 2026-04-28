@@ -43,32 +43,18 @@
     "scripts": {
         "cs":"@phpcsfixer",
         "pu":"@phpunit",
-        "puv":"@phpunit-verbose",
-        "pui":"@phpunit-int-suite",
-        "puiv":"@phpunit-int-verbose",
         "puf":"@phpunit-func-suite",
-        "pufv":"@phpunit-func-verbose",
         "stan":"vendor/bin/phpstan analyse -c phpstan.neon",
         "test": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full",
         "test-only": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter SecurityTest::testSpecialCharactersDoNotCauseInjection",
-        "test-psr16": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter CacheIntegrationTest",
-        "test-psr6": "./vendor/bin/phpunit --display-deprecations --display-notices --display-warnings --colors=always --configuration ./phpunit.xml --bootstrap .phpunit_full --filter PoolIntegrationTest",
         "phpunit" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --testsuite unit",
-        "phpunit-verbose" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --no-output --log-events-text php://stdout",
-        "phpunit-int-suite" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --testsuite integration --bootstrap .phpunit_full",
         "phpunit-func-suite" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --testsuite functional --bootstrap .phpunit_full",
-        "phpunit-int-verbose" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --testsuite integration --bootstrap .phpunit_full --no-output --log-events-text php://stdout",
-        "phpunit-func-verbose" : "./vendor/bin/phpunit --colors=always --configuration ./phpunit.xml --testsuite functional --bootstrap .phpunit_full --no-output --log-events-text php://stdout",
         "phpcsfixer": "./vendor/bin/php-cs-fixer fix --config=./.php-cs-fixer.php --diff -vvv"
     },
     "scripts-descriptions": {
         "test": "Run the full tests suite",
-        "pu": "Run all unit tests",
-        "puv": "Run all unit tests but verbose..",
-        "pui": "Run all integration tests",
-        "puf": "Run all functional tests",
-        "cs": "Clean the sources",
-        "test-psr6": "Run the PSR-6 integration tests suite",
-        "test-psr16": "Run the PSR-16 integration tests suite"
+        "pu": "Run all unit tests (add -vvv for verbose)",
+        "puf": "Run all functional tests  (add -vvv for verbose)",
+        "cs": "Clean the sources"
     }
 }
