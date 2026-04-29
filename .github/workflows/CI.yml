@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ dev ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, dev ]
   workflow_dispatch:
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
     steps:
         # Step 1: Checkout repository code
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Step 2: Setup PHP with required extensions
       - name: Setup PHP ${{ matrix.php }}
@@ -45,7 +45,7 @@ jobs:
 
       # Step 3: Cache Composer dependencies (speeds up subsequent builds)
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             vendor
@@ -76,3 +76,7 @@ jobs:
       # Step 8: Run entire tests suite
       - name: Run all tests
         run: composer test
+
+      # Step 9: Static code analysis
+      # - name: Run static code analysis
+      # run: composer stan-dist
