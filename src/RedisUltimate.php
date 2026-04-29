@@ -327,6 +327,27 @@ class RedisUltimate extends RedisAdapter
     }
 
     /**
+     * By default return the 30 last elements in reversed order by score
+     *
+     * @param string $key
+     * @return array the set members
+     */
+    public function zrevrange(string $key, int $start=-31, int $end=-1): array
+    {
+        $redisResponse = [];
+        $this->init($key);
+
+        try {
+            $redisResponse = $this->getRedis()->zrevrange($key, $start, $end);
+        } catch (\Throwable $t) {
+            $redisResponse = [];
+            $this->formatException($t);
+        } finally {
+            return $redisResponse;
+        }
+    }
+
+    /**
      * Check if a member exists
      *
      * @param string $key
@@ -357,7 +378,7 @@ class RedisUltimate extends RedisAdapter
      * @param <string>array $keys One or more set key names.
      * @return array|false
      */
-    public function zintersect(string ...$keys): array | false
+    public function zinter(string ...$keys): array | false
     {
         $redisResponse = false;
         if (!$this->isConnected()) {
@@ -365,8 +386,13 @@ class RedisUltimate extends RedisAdapter
         }
 
         try {
-            if ($keys) {
-                $redisResponse = $this->getRedis()->zinter($keys);
+            $destination = 'tmp:zinter:' . bin2hex(random_bytes(4));
+            if (count($keys)) {
+                $redisResponse = $this->getRedis()->zinterstore($destination, $keys);
+                dump($redisResponse);
+                $redisResponse = $this->getRedis()->zrange($destination, 0, -1, ['withscores' => true]);
+                $this->getRedis()->del($destination);
+                dump('???', $redisResponse);
             }
         } catch (\Throwable $t) {
             $redisResponse = false;
@@ -376,13 +402,38 @@ class RedisUltimate extends RedisAdapter
         }
     }
 
+        public function zrevinter(string ...$keys): array | false
+    {
+        $redisResponse = false;
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+
+        try {
+            $destination = 'tmp:zinter:' . bin2hex(random_bytes(4));
+            if (count($keys)) {
+                $redisResponse = $this->getRedis()->zinterstore($destination, $keys);
+                dump($redisResponse);
+                $redisResponse = $this->getRedis()->zrevrange($destination, 0, -1, ['withscores' => true]);
+                $this->getRedis()->del($destination);
+                dd($redisResponse);
+            }
+        } catch (\Throwable $t) {
+            $redisResponse = false;
+            $this->formatException($t);
+        } finally {
+            return $redisResponse;
+        }
+    }
+
+
     /**
      * Given one or more Redis SETS, this command returns all of the members from the first set that are not in any subsequent set.
      *
      * @param string $keys
      * @return array|false
      */
-    public function zdifference(string ...$keys): array | false
+    public function zdiff(string ...$keys): array | false
     {
         $redisResponse = false;
         if (!$this->isConnected()) {
