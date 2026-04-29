@@ -23,9 +23,7 @@ class RedisUltimate extends RedisAdapter
 {
     public function deleteSet(string $key): bool
     {
-        if (!$this->isConnected()) {
-            $this->throwCLEx();
-        }
+        $this->init($key);
 
         try {
             $redisResponse = $this->getRedis()->del($key);
