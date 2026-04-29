@@ -7,6 +7,7 @@ namespace LLegaz\Ultimate;
 use LLegaz\Redis\RedisAdapter;
 use LLegaz\Ultimate\Exception\InvalidArgumentException;
 use LLegaz\Ultimate\Exception\InvalidKeyException;
+use LLegaz\Ultimate\Exception\UnsupportedMethodException;
 
 /**
  * This class purpose is mainly to handle SETs operations but also to wrap other utility methods not handled in RedisCache
@@ -42,9 +43,8 @@ class RedisUltimate extends RedisAdapter
      * @param mixed $members
      * @return int
      */
-    public function remove(string $key, mixed ...$members): int
+    public function remove(string $key, mixed ...$members): int | bool
     {
-        $redisResponse = 0;
         if (!count($members)) {
             throw new InvalidArgumentException();
         }
@@ -54,7 +54,6 @@ class RedisUltimate extends RedisAdapter
             $redisResponse = call_user_func_array([$this->getRedis(), 'srem'], array_merge([$key], $members));
         } catch (\Throwable $t) {
             $redisResponse = 0;
-            dump('fail', $t);
             $this->formatException($t);
         } finally {
             return $redisResponse;
@@ -68,9 +67,8 @@ class RedisUltimate extends RedisAdapter
      * @param mixed $members
      * @return int
      */
-    public function add(string $key, mixed ...$members): int
+    public function add(string $key, mixed ...$members): int | bool
     {
-        $redisResponse = 0;
         if (!count($members)) {
             throw new InvalidArgumentException();
         }
@@ -92,15 +90,14 @@ class RedisUltimate extends RedisAdapter
      * @param string $key
      * @return int
      */
-    public function count(string $key): int
+    public function count(string $key): int | bool
     {
-        $redisResponse = 0;
         $this->init($key);
 
         try {
             $redisResponse = $this->getRedis()->scard($key);
         } catch (\Throwable $t) {
-            $redisResponse = [];
+            $redisResponse = 0;
             $this->formatException($t);
         } finally {
             return $redisResponse;
@@ -114,15 +111,14 @@ class RedisUltimate extends RedisAdapter
      * @param string $key
      * @return array the set members
      */
-    public function members(string $key): array
+    public function members(string $key): array | bool
     {
-        $redisResponse = [];
         $this->init($key);
 
         try {
             $redisResponse = $this->getRedis()->smembers($key);
         } catch (\Throwable $t) {
-            $redisResponse = [];
+            $redisResponse = false;
             $this->formatException($t);
         } finally {
             return $redisResponse;
@@ -138,7 +134,6 @@ class RedisUltimate extends RedisAdapter
      */
     public function isMember(string $key, mixed $member): bool
     {
-        $redisResponse = false;
         if (!$member) {
             throw new InvalidArgumentException();
         }
@@ -160,7 +155,7 @@ class RedisUltimate extends RedisAdapter
      * @param <string>array $keys One or more set key names.
      * @return array|false
      */
-    public function intersect(string ...$keys): array | false
+    public function intersect(string ...$keys): array | bool
     {
         $redisResponse = false;
         if (!$this->isConnected()) {
@@ -185,7 +180,7 @@ class RedisUltimate extends RedisAdapter
      * @param string $keys
      * @return array|false
      */
-    public function difference(string ...$keys): array | false
+    public function difference(string ...$keys): array | bool
     {
         $redisResponse = false;
         if (!$this->isConnected()) {
@@ -217,7 +212,7 @@ class RedisUltimate extends RedisAdapter
      * @param mixed $members
      * @return int
      */
-    public function zrem(string $key, mixed $value): int
+    public function zrem(string $key, mixed $value): int | bool
     {
         if (!$value) {
             throw new InvalidArgumentException();
@@ -228,7 +223,6 @@ class RedisUltimate extends RedisAdapter
             $redisResponse = $this->getRedis()->zrem($key, $value);
         } catch (\Throwable $t) {
             $redisResponse = 0;
-            dump('fail', $t);
             $this->formatException($t);
         } finally {
             return $redisResponse;
@@ -251,7 +245,6 @@ class RedisUltimate extends RedisAdapter
 
         try {
             $redisResponse = $this->getRedis()->zadd($key, $score, $value);
-            dump($redisResponse);
         } catch (\Throwable $t) {
             $redisResponse = 0;
             $this->formatException($t);
@@ -260,6 +253,15 @@ class RedisUltimate extends RedisAdapter
         }
     }
 
+    /**
+     * We are stating that only 1 element is stored for 1 score in order to use that implementation
+     * 
+     * @param string $key
+     * @param int $score
+     * @param mixed $value
+     * @return bool
+     * @throws InvalidArgumentException
+     */
     public function zupdate(string $key, int $score, mixed $value): bool
     {
         if (!$value) {
@@ -284,26 +286,44 @@ class RedisUltimate extends RedisAdapter
     }
 
     /**
-     * Count members
+     * Return the number of elements in a sorted set.
      *
      * @param string $key
      * @return int
      */
-    public function zcount(string $key): int
+    public function zcard(string $key): int
     {
-        $redisResponse = 0;
         $this->init($key);
 
         try {
             $redisResponse = $this->getRedis()->zcard($key);
         } catch (\Throwable $t) {
-            $redisResponse = [];
+            $redisResponse = 0;
             $this->formatException($t);
         } finally {
             return $redisResponse;
         }
     }
 
+    /**
+     * Count members inside a provided range of scores
+     *
+     * @param string $key
+     * @return int
+     */
+    public function zcount(string $key, int|string $scoreMin = '-Inf', int|string $scoreMax = '+Inf'): int
+    {
+        $this->init($key);
+
+        try {
+            $redisResponse = $this->getRedis()->zcount($key, $scoreMin, $scoreMax);
+        } catch (\Throwable $t) {
+            $redisResponse = 0;
+            $this->formatException($t);
+        } finally {
+            return $redisResponse;
+        }
+    }
 
     /**
      * By default return the 30 last elements
@@ -311,15 +331,14 @@ class RedisUltimate extends RedisAdapter
      * @param string $key
      * @return array the set members
      */
-    public function zrange(string $key, int $start=-31, int $end=-1): array
+    public function zrange(string $key, int $start = -31, int $end = -1): array | bool
     {
-        $redisResponse = [];
         $this->init($key);
 
         try {
             $redisResponse = $this->getRedis()->zrange($key, $start, $end);
         } catch (\Throwable $t) {
-            $redisResponse = [];
+            $redisResponse = false;
             $this->formatException($t);
         } finally {
             return $redisResponse;
@@ -332,15 +351,14 @@ class RedisUltimate extends RedisAdapter
      * @param string $key
      * @return array the set members
      */
-    public function zrevrange(string $key, int $start=-31, int $end=-1): array
+    public function zrevrange(string $key, int $start = -31, int $end = -1): array | bool
     {
-        $redisResponse = [];
         $this->init($key);
 
         try {
             $redisResponse = $this->getRedis()->zrevrange($key, $start, $end);
         } catch (\Throwable $t) {
-            $redisResponse = [];
+            $redisResponse = false;
             $this->formatException($t);
         } finally {
             return $redisResponse;
@@ -348,37 +366,14 @@ class RedisUltimate extends RedisAdapter
     }
 
     /**
-     * Check if a member exists
-     *
-     * @param string $key
-     * @param mixed $member
-     * @return bool
-     */
-    public function zisMember(string $key, mixed $member): bool
-    {
-        $redisResponse = false;
-        if (!$member) {
-            throw new InvalidArgumentException();
-        }
-        $this->init($key);
-
-        try {
-            $redisResponse = $this->getRedis()->zismember($key, $member);
-        } catch (\Throwable $t) {
-            $redisResponse = false;
-            $this->formatException($t);
-        } finally {
-            return is_int($redisResponse) ? $redisResponse === 1 : $redisResponse;
-        }
-    }
-
-    /**
-     *  Compute the intersection of one or more sets and return intersected members of all SETs.
-     *
-     * @param <string>array $keys One or more set key names.
+     *  Compute the intersection of one or more sorted sets and return intersected members of all SETs.
+     * 
+     * Scores low to high
+     * 
+     * @param string $keys
      * @return array|false
      */
-    public function zinter(string ...$keys): array | false
+    public function zinter(string ...$keys): array | bool
     {
         $redisResponse = false;
         if (!$this->isConnected()) {
@@ -389,10 +384,11 @@ class RedisUltimate extends RedisAdapter
             $destination = 'tmp:zinter:' . bin2hex(random_bytes(4));
             if (count($keys)) {
                 $redisResponse = $this->getRedis()->zinterstore($destination, $keys);
-                dump($redisResponse);
+                if ($redisResponse === false) {
+                    return $redisResponse;
+                }
                 $redisResponse = $this->getRedis()->zrange($destination, 0, -1, ['withscores' => true]);
                 $this->getRedis()->del($destination);
-                dump('???', $redisResponse);
             }
         } catch (\Throwable $t) {
             $redisResponse = false;
@@ -402,7 +398,15 @@ class RedisUltimate extends RedisAdapter
         }
     }
 
-        public function zrevinter(string ...$keys): array | false
+    /**
+     *  Compute the intersection of one or more sorted sets and return intersected members of all SETs.
+     * 
+     * Scores high to low
+     * 
+     * @param string $keys
+     * @return array|false
+     */
+    public function zrevinter(string ...$keys): array | bool
     {
         $redisResponse = false;
         if (!$this->isConnected()) {
@@ -413,10 +417,11 @@ class RedisUltimate extends RedisAdapter
             $destination = 'tmp:zinter:' . bin2hex(random_bytes(4));
             if (count($keys)) {
                 $redisResponse = $this->getRedis()->zinterstore($destination, $keys);
-                dump($redisResponse);
+                if ($redisResponse === false) {
+                    return $redisResponse;
+                }
                 $redisResponse = $this->getRedis()->zrevrange($destination, 0, -1, ['withscores' => true]);
                 $this->getRedis()->del($destination);
-                dd($redisResponse);
             }
         } catch (\Throwable $t) {
             $redisResponse = false;
@@ -428,13 +433,15 @@ class RedisUltimate extends RedisAdapter
 
 
     /**
-     * Given one or more Redis SETS, this command returns all of the members from the first set that are not in any subsequent set.
+     * Given one or more Redis ZSETS, this command returns all of the members from the first set that are not in any subsequent set.
      *
      * @param string $keys
      * @return array|false
      */
-    public function zdiff(string ...$keys): array | false
+    public function zdiff(string ...$keys): array | bool
     {
+        throw new UnsupportedMethodException('Unfortunately zdiff is not supported by phpredisqymfony  and predis version used');
+
         $redisResponse = false;
         if (!$this->isConnected()) {
             $this->throwCLEx();
@@ -469,6 +476,11 @@ class RedisUltimate extends RedisAdapter
 
         return $this->getRedis()->incr($key);
     }
+
+    /**************************************************
+     * internal methods
+     *
+     */
 
     /**
      *
