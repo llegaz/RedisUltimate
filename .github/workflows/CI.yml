@@ -51,13 +51,13 @@ jobs:
             vendor
             composer.lock
             ~/.composer/cache
-          key: ${{ runner.os }}-php-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.json') }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: |
-            ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
+            ${{ runner.os }}-composer-
 
       # Step 4: Install project dependencies via Composer
       - name: Install dependencies
-        run: composer install --prefer-dist --no-progress --no-interaction
+        run: composer install --prefer-dist --no-progress --no-interaction || composer update --prefer-dist --no-progress --no-interaction
 
       # Step 5: Validate composer.json and composer.lock structure
       - name: Validate composer files
