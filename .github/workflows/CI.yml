@@ -51,9 +51,9 @@ jobs:
             vendor
             composer.lock
             ~/.composer/cache
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          key: ${{ runner.os }}-php-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: |
-            ${{ runner.os }}-composer-
+            ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
 
       # Step 4: Install project dependencies via Composer
       - name: Install dependencies
