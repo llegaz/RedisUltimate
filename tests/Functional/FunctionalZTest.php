@@ -14,11 +14,11 @@ use LLegaz\Ultimate\Tests\TestState;
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
-class FunctionalTest extends \PHPUnit\Framework\TestCase
+class FunctionalZTest extends \PHPUnit\Framework\TestCase
 {
     protected $ultimate;
-    protected array $set1 = ['apple', 'pear', 'banana', 'carrot'];
-    protected array $set2 = ['apple', 'banana', 'kiwi'];
+    protected array $set1 = [[1 => 'apple'],[1 => 'pear'],[1 => 'banana'],[1 => 'carrot']];
+    protected array $set2 = ['kiwi', 'banana', 'apple'];
     protected array $set3 = ['apple', 'pear', 'banana'];
     protected array $setsName = ['test1', 'test2', 'test3'];
 
@@ -42,13 +42,13 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
     public function testInitSets(): void
     {
 
-        $this->ultimate->add($this->setsName[0], ...$this->set1);
-        $this->ultimate->add($this->setsName[1], ...$this->set2);
-        $this->ultimate->add($this->setsName[2], ...$this->set3);
+        $this->ultimate->zadd($this->setsName[0], ...$this->set1);
+        $this->ultimate->zadd($this->setsName[1], ...$this->set2);
+        $this->ultimate->zadd($this->setsName[2], ...$this->set3);
 
-        $this->assertEqualsCanonicalizing(
-            ['banana', 'apple'],
-            $this->ultimate->intersect(
+        $this->assertSame(
+            ['apple', 'banana'],
+            $this->ultimate->zintersect(
                 $this->setsName[0],
                 $this->setsName[1],
                 $this->setsName[2],
@@ -56,7 +56,7 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
         );
         $this->assertEquals(
             ['carrot'],
-            $this->ultimate->difference(
+            $this->ultimate->zdifference(
                 $this->setsName[0],
                 $this->setsName[1],
                 $this->setsName[2],
@@ -70,28 +70,28 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
      */
     public function testRemoveFromSet(): void
     {
-        $this->assertFalse($this->ultimate->isMember($this->setsName[2], 'truc'));
-        $this->assertTrue($this->ultimate->isMember($this->setsName[2], 'apple'));
+        $this->assertFalse($this->ultimate->zisMember($this->setsName[2], 'truc'));
+        $this->assertTrue($this->ultimate->zisMember($this->setsName[2], 'apple'));
         $this->assertSame(
             1,
-            $this->ultimate->remove($this->setsName[2], 'apple')
+            $this->ultimate->zremove($this->setsName[2], 'apple')
         );
         $this->assertEquals(
             ['banana'],
-            $this->ultimate->intersect(
+            $this->ultimate->zintersect(
                 $this->setsName[0],
                 $this->setsName[1],
                 $this->setsName[2],
             )
         );
 
-        $this->assertFalse($this->ultimate->isMember($this->setsName[0], 'truc'));
-        $this->assertTrue($this->ultimate->isMember($this->setsName[0], 'carrot'));
+        $this->assertFalse($this->ultimate->zisMember($this->setsName[0], 'truc'));
+        $this->assertTrue($this->ultimate->zisMember($this->setsName[0], 'carrot'));
         $this->assertSame(
             1,
-            $this->ultimate->remove($this->setsName[0], 'carrot')
+            $this->ultimate->zremove($this->setsName[0], 'carrot')
         );
-        $diff = $this->ultimate->difference(
+        $diff = $this->ultimate->zdifference(
             $this->setsName[0],
             $this->setsName[1],
             $this->setsName[2],
@@ -109,8 +109,16 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
     {
         $this->assertSame(3, $this->ultimate->count($this->setsName[1]));
         $this->assertSame(
+            ['apple',
+                'banana',
+                'kiwi',],
+            $this->ultimate->zmembers(
+                $this->setsName[1]
+                    )
+        );
+        $this->assertSame(
             3,
-            $this->ultimate->remove(
+            $this->ultimate->zremove(
                 $this->setsName[1],
                 'apple',
                 'banana',
@@ -118,7 +126,7 @@ class FunctionalTest extends \PHPUnit\Framework\TestCase
                 'truc'
             )
         );
-        $this->assertSame(0, $this->ultimate->count($this->setsName[1]));
+        $this->assertSame(0, $this->ultimate->zcount($this->setsName[1]));
     }
 
     /**
