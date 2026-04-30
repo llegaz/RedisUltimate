@@ -13,15 +13,20 @@ use LLegaz\Ultimate\Exception\UnsupportedMethodException;
  * This class purpose is mainly to handle SETs operations but also to wrap other utility methods not handled in RedisCache
  *
  *
- *
  * <b>Convention</b>
  * KEY is the set's NAME
  * MEMBER(s) the set's members
+ * 
+ * 
+ * @toto maybe work around $options and unfinished method at the end
+ * 
  *
  * @author Laurent LEGAZ <laurent@legaz.eu>
  */
 class RedisUltimate extends RedisAdapter
 {
+    protected array $options = ['withscores' => false];
+
     public function deleteSet(string $key): bool
     {
         $this->init($key);
@@ -311,7 +316,7 @@ class RedisUltimate extends RedisAdapter
      * @param string $key
      * @return int
      */
-    public function zcount(string $key, int|string $scoreMin = '-Inf', int|string $scoreMax = '+Inf'): int
+    public function zcount(string $key, string $scoreMin = '-Inf', string $scoreMax = '+Inf'): int
     {
         $this->init($key);
 
@@ -387,7 +392,11 @@ class RedisUltimate extends RedisAdapter
                 if ($redisResponse === false) {
                     return $redisResponse;
                 }
-                $redisResponse = $this->getRedis()->zrange($destination, 0, -1, ['withscores' => true]);
+                // grab all
+                $redisResponse = $this->getRedis()->zrange(
+                    $destination, 0, -1,
+                    ['withscores' => $this->options['withscores']]
+                );
                 $this->getRedis()->del($destination);
             }
         } catch (\Throwable $t) {
@@ -420,7 +429,11 @@ class RedisUltimate extends RedisAdapter
                 if ($redisResponse === false) {
                     return $redisResponse;
                 }
-                $redisResponse = $this->getRedis()->zrevrange($destination, 0, -1, ['withscores' => true]);
+                // grab all
+                $redisResponse = $this->getRedis()->zrevrange(
+                    $destination, 0, -1,
+                    ['withscores' => $this->options['withscores']]
+                );
                 $this->getRedis()->del($destination);
             }
         } catch (\Throwable $t) {
@@ -431,6 +444,28 @@ class RedisUltimate extends RedisAdapter
         }
     }
 
+    /**
+     * Thinking of a method testing if an element exist at score and try to update it or simply add a new element in the sorted set
+     * 
+     * mirror method could use zrange -1 or zrevrange to pop the "last" element
+     * 
+     * @param string $key
+     * @param int $score
+     * @param mixed $value
+     * @return bool
+     * @throws UnsupportedMethodException
+     */
+    public function zpush(string $key, int $score, mixed $value): bool {
+        throw new UnsupportedMethodException('Not implemented');
+        $min = 0;
+        if ($score > 0) {
+            $min = $score - 1;
+        } elseif ($score < 0) {
+            $max = 0;
+        }
+        $max = $score + 1;
+        dump($this->zcount($key, '(' . $min, '(' . $max), $key, $min, $max, $score, $value);
+    }
 
     /**
      * Given one or more Redis ZSETS, this command returns all of the members from the first set that are not in any subsequent set.
@@ -457,6 +492,14 @@ class RedisUltimate extends RedisAdapter
         } finally {
             return $redisResponse;
         }
+    }
+
+    public function setOptions(array $options) :self {
+        if (isset($options['withscores'])) {
+            $this->options = $options;
+        }
+
+        return $this;
     }
 
     /**************************************************
