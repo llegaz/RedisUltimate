@@ -26,7 +26,15 @@ sdiff(string $key, string ...$keys): array     // Difference
 
 ---
 
-## 3️⃣ Lists — Basic MQ
+## 3️⃣ Zsets- sorted sets
+```php
+zadd(string $key, mixed ...$members): int      // Add one or more members
+zrem(string $key, mixed ...$members): int      // Remove one or more members
+zrange(string $key): array                   // Return all members
+zcard(string $key): int                        // Count members
+```
+
+## 4️⃣ Lists — Basic MQ
 
 ```php
 rpush(string $key, mixed ...$values): int      // Producer: push a message
