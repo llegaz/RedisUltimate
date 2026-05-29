@@ -180,6 +180,31 @@ class RedisUltimate extends RedisAdapter
     }
 
     /**
+     *  Compute the union of one or more sets and return intersected members of all SETs.
+     *
+     * @param <string>array $keys One or more set key names.
+     * @return array|false
+     */
+    public function union(string ...$keys): array | bool
+    {
+        $redisResponse = false;
+        if (!$this->isConnected()) {
+            $this->throwCLEx();
+        }
+
+        try {
+            if ($keys) {
+                $redisResponse = $this->getRedis()->sunion($keys);
+            }
+        } catch (\Throwable $t) {
+            $redisResponse = false;
+            $this->formatException($t);
+        } finally {
+            return $redisResponse;
+        }
+    }
+
+    /**
      * Given one or more Redis SETS, this command returns all of the members from the first set that are not in any subsequent set.
      *
      * @param string $keys
